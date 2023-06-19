@@ -1,0 +1,6 @@
+path: /home/sona/04_starbucks/data
+train: ./images/train
+val: ./images/val
+
+nc: 2
+names: ['logo', 'letter']
