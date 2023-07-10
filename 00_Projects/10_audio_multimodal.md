@@ -1,5 +1,6 @@
 # 기침소리 오디오데이터와 환자 정보 정형데이터를 이용한 코로나 감염 여부 판단 멀티모달 모델 구축
-작성자 sona0817
+작성자 sona0817  
+코드확인: [오디오 멀티모달 토이 프로젝트 코드](https://github.com/Sona0817/study/tree/main/02_DL/2304_audio_multimodal)
 
 ## Abstract
  기침소리 오디오데이터를 MFCC 변환, 수치화 하여 환자의 발열상태, 근육통, 호흡기질환 등에 대한 정형데이터와 하나의 데이터프레임으로 합치는 Multimodal Early Fusion 기술을 사용하여
