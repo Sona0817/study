@@ -114,42 +114,65 @@ MFCC는 음성신호의 특성을 추출하는 것에 목적이 있고, 주파�
 Mel-Spectrogram은 주파수 콘텐츠를 시간에 따라 시각화 하는 것에 목적이 있다.
 
 #### 3.1.7. Log
+멜 필터 뱅크의 결과에 로그를 취하여 선형 척도에서 로그 척도로 변환한다.
+인간의청각 특성을 모델링하기 위한 것으로 다음단계에 DCT(Discrete Cosine Transform) 또는 IFFT(Inverse Fast Fourier Transform)을 잘 적용하기 위해 log를 취한다.
+
+#### 3.1.8. Discrete Cosice Transform (DCT; 이산 코사인 변환)
+MFCC를 추출할 때 일반적으로 CDT가 쓰이고, 로그화 된 Mel-spectrum을 차원축소하여 특징을 얻는 방법 중 하나다.
+DCT의 주요 목적은 스펙트럼의 정보를 보존하면서 차원을 줄이는 것이다.
+실수 입력에 대한 변환으로, 대부분의 실제 MFCC 계수 추출에서 사용된다.
+DCT를 사용하면 변환된 계수의 첫번째 몇개만 사용되며, 이를 통해 중요한 주파수 대역을 표현할 수 있다.
+librosa.feature.mfcc() 함수에서는 n_mfcc 파라미터를 통해 사용할 계수의 개수를 설정할 수 있다.
+
+### 3.2. SMOTE
+SMOTE는 Synthetic Minority Over-sampling Technique의 약자로, 대표적인 오버 샘플링 기법이다.
+데이터세트의 균형을 맞추기 위해 사용하며, 소수 클래스에 대한 합성 샘플을 생성한다.
+
+SMOTE는 소수클래스 데이터를 무작위로 선택하는 것으로 시작하여 데이터에 대한 k-근접이웃 알고리즘을 설정한다.
+이후 선택된 랜덤 데이터와 무작위로 선택된 k-근접이웃 데이터 사이에 합성 데이터가 생성된다.
+SMOTE는 소수클래스의 합성 데이터를 생성하는 동안 인접한 다수 클래스 데이터의 위치를 고려하지 않기 때문에 클래스가 겹치거나 노이즈가 발생할 수 있다.
+따라서 고차원 데이터를 분류하는데는 비효율적이지만 오디도데이터와 정형데이터 같은 1차원, 2차원 데이터에 대해서는 효과적이다.
+
+<p align='center'>
+ <img width="60%" alt="image" src="https://github.com/Sona0817/study/assets/80690009/d75b819e-03fe-4b9f-a513-e8bec76ced96">
+</p>
 
 
+### 3.3. Multimodal Early Fusion
+멀티모달 심층학습 모델에서 CNN과 FC레이어로 구형되는 특징 추출기와 분류기 이전에 두 입력 요소의 결합이 수행되면 Early Fusion(전단융합)이라 한다.
+오디오데이터의 MFCC를 추출하여 수치화 하였기 때문에 기존의 다른 정형데이터와 함쳐 하나의 데이터프레임으로 만드는 것이 어렵지 않고,
+데이터의 초기 단계에서 모달리티 간의 상호작용과 유용한 특징의 결합이 가능하기 때문에 Early Fusion을 선택했다.
 
+<p align='center'>
+ <img width="80%" alt="image" src="https://github.com/Sona0817/study/assets/80690009/770c6c24-2e58-4762-8fac-49017c9b20a0">
+</p>
 
+## 4. Conclusion
+본 프로젝트는 오디오데이터와 정형데이터를 이용해 코로나 감염여부를 판단하는 모델을 만드는 것이 목표다.
+3085개의 오디오데이터와 정형데이터로 학습했다.
+오디오데이터는 MFCC 특성을 추출하였고, 정형데이터는 학습에 용이하도록 int형으로 변환했다.
+MFCC를 추출할 때 sample_rate 파라미터는 사람 목소리와 비슷한 16000으로 설정, n_mfcc는 30으로 설정했다.
+Early Fusion을 통해 오디오데이터와 정형데이터를 합친 후 클래스 불균형(0:3499, 1:306)을 해결하기 위해 SMOTE 알고리즘을 통해 학습 데이터셋(0:3499, 1:3499)을 구축했다.
+학습데이터셋을 8대 2로 나누어 5598개의 train data와 1400개의 valid data를 구축하였고,
+train data를 3가지 모델 Random Forest Classifier, MLP Classifier, Deep Linear Model에 학습시켰다.
+valid data를 통해 3가지 모델을 평가한 결과는 아래와 같다.
 
+<p align='center'>
+ <img width="80%" alt="image" src="https://github.com/Sona0817/study/assets/80690009/a0007d23-8fe7-4794-97e8-2f464fc59754">
+</p>
 
+Random Forest와 Deep Linear Model은 0.9를 넘는 Accuracy를 보여 성능이 좋은편이고,
+MLP의 경우 0.84 정도의 Accuracy로 약간 아쉬운 성능을 보였다.
+3가지 모델이 전체적으로 높은 Accuracy를 모이기 때문에 오디오데이터와 정형데이터의 Early Fusion 멀티모달 학습이 대체적으로 잘 이루어졌다고 할 수 있다.
 
+모델의 성능을 향상시키기 위해서 대상자의 호흡기질환, 발열여부 외에 산소포화도, 심박수 등의 정보나 X-ray 사진 등 추가적인 정보 수집을 할 수 있다.
+또한, 본 프로젝트에서는 비교적 간단한 모델을 사용하여 멀티모달 데이터를 처리했는데 CNN이나 LSTM 등 다양한 모델 아키텍처를 이용하여 좀 더 좋은 성능의 모델을 구축할 수 있다.
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+## Reference
+- 음성신호를 이용한 양방향 LSTM 기반 우울증 진단, 조아현, Journal of KIIT, Vol.20, No.1, 31 Jan 2022
+- 전단 융합 기반 멀티모달 심층학습을 이용한 손동작 분류, 김익진, The Transaction of the Korean Insitute of Electrical Engineers, KIEE Vol.70, No.11, 27 Oct 2021
+- An Efficient SMOTE-Based Deep Learning Model for Voice Pathology Detection, Ji-Na Lee, article belongs to the Special Issu AI, Machine Learning and Deep Learning in Signal Processing, 10 Mar 2023
+- On the Benefits of Early Fusion in Multimodal Representation Learning, George Barnum, 14 Nov 2020
 
 
 
